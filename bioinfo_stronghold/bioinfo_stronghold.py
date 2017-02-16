@@ -321,6 +321,7 @@ class Bioinfo_StrongHold(object):
         # if we have N samples in fasta dictionary, we can compare the 1st sample's suffix with the rest (N - 1) of samples' prefix
         # the above forms (N - 1) comparisons
         # if we do the same for the 2nd sample? again (N - 1) comparisons to be made.
+        # THINK about why this algorithm can solve our problem? 
         # so in total, we need to make N(N - 1) comparisons.
         # thus we take the dominant term N^2 and claim the time complexity of this algorithm is O(N^2). This is the so-called bigO notation.
         # big O notation is a measure of how efficient your algorithm is. You need to know this and analyze algorithm like this in the future.
