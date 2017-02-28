@@ -341,6 +341,72 @@ class Bioinfo_StrongHold(object):
         return ;
 
 
+    def find_shared_motif(self, filepath):
+        f = open(filepath, 'r')
+        lines = f.readlines() # read all the content into a list
+
+        '''
+        here I am introducing an elegant way to read multiple-line fasta file encountered in rosalind.info problems.
+        '''
+        # chop off sequence by sequence separated by line containing '>'
+        s = 1 # mark the first occurrence of actual sequence
+        i = 0 # init pointer
+        sequences = []
+        while s + i < len(lines):
+            if not lines[s + i].startswith('>'):
+                i += 1
+            else:
+                e = s + i # make the end of an entire sequence
+                sequences.append(lines[s : e])
+                s = s + i + 1 # mark the next occurrence of actual sequence
+                i = 0 # restore pointer
+
+        # connected disconnected sequence
+        for i in range(len(sequences)):
+            sequence = sequences[i]
+            sequence = [seq.rstrip('\n') for seq in sequence]
+            sequences[i] = ''.join(sequence)
+
+
+        lines = sequences
+        # find the shortest line
+        minlength = len(lines[0])
+        minline = lines[0]
+        for line in lines:
+            if len(line) < minlength:
+                minlength = len(line)
+                minline = line
+        # print minline
+
+        # generate all possible substrings
+        subStrings = []
+        for length in range(minlength, 0, -1): # minlength -> 1
+            for e in range(minlength, 0, -1):
+                if e - length < 0:
+                    break
+                subStrings.append(minline[e - length :e])
+        # print subStrings
+
+        # find the common string
+        for ss in subStrings:
+            i = 0
+            while i < len(lines):
+                if not ss in lines[i]:
+                    break
+                else:
+                    i += 1
+            if i == len(lines):
+                return ss
+
+        return None
+
+
+
+
+
+
+
+
 
 
 
@@ -357,7 +423,7 @@ q5_data = "countPointMutations.txt"
 q6_data = "translatingRNA2protein.txt"
 q7_data = "findMotif_inDNA.txt"
 q8_data = "overlapGraph.txt"
-
+q9_data = "find_shared_motif.txt"
 
 """
 run solution code, comment off to see.
@@ -370,7 +436,8 @@ so = Bioinfo_StrongHold()
 # print so.countPointMutation(RELATIVE_PATH + q5_data)
 # print so.translateRNA2protein(RELATIVE_PATH + q6_data)
 # print so.findMotif(RELATIVE_PATH + q7_data)
-print so.overlapGraph(RELATIVE_PATH + q8_data)
+# print so.overlapGraph(RELATIVE_PATH + q8_data)
+print so.find_shared_motif(RELATIVE_PATH + q9_data)
 
 
 """
