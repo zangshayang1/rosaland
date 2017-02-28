@@ -341,12 +341,37 @@ class Bioinfo_StrongHold(object):
         return ;
 
 
+
+    """
+    Q9 find a shared motif
+    Input: ugly fasta,
+                meaning the input contains multiple sample sequence,
+                each sample starts with a line with '> sample name',
+                followed by multiple lines of sequence,
+                which consists of the sample.
+    Output: a motif sequence that is shared among all the samples
+
+    Example input:
+            >Rosalind_1
+            GATTACA
+            >Rosalind_2
+            TAGACCA
+            >Rosalind_3
+            ATACA
+    Example output:
+            AC
+    """
     def find_shared_motif(self, filepath):
         f = open(filepath, 'r')
         lines = f.readlines() # read all the content into a list
+        f.close() # don't forget.
 
         '''
         here I am introducing an elegant way to read multiple-line fasta file encountered in rosalind.info problems.
+        I can do it elegantly this time because, unlike in Q8, we don't need sample name info.
+
+        however it inspired me to create an independent method "read_ugly_fasta()" below so it reads in "ugly fasta",
+            outputs a dictionary like Q8, so the method can be applied to most of the cases.
         '''
         # chop off sequence by sequence separated by line containing '>'
         s = 1 # mark the first occurrence of actual sequence
@@ -361,12 +386,11 @@ class Bioinfo_StrongHold(object):
                 s = s + i + 1 # mark the next occurrence of actual sequence
                 i = 0 # restore pointer
 
-        # connected disconnected sequence
+        # connect disconnected sequence
         for i in range(len(sequences)):
             sequence = sequences[i]
             sequence = [seq.rstrip('\n') for seq in sequence]
             sequences[i] = ''.join(sequence)
-
 
         lines = sequences
         # find the shortest line
@@ -376,7 +400,12 @@ class Bioinfo_StrongHold(object):
             if len(line) < minlength:
                 minlength = len(line)
                 minline = line
-        # print minline
+
+        '''
+        the following two operations are very time consuming. this algorithm doesn't scale well when the input gets bigger.
+        handing the current input with at most 100 samples and 1K bp each, takes about 1s.
+        however I can't think of any other algorithm that can accomplish the same thing right now.
+        '''
 
         # generate all possible substrings
         subStrings = []
@@ -385,13 +414,12 @@ class Bioinfo_StrongHold(object):
                 if e - length < 0:
                     break
                 subStrings.append(minline[e - length :e])
-        # print subStrings
 
-        # find the common string
+        # find the common string -> this is exactly Q7, the "string matching" algorithm I used in Q7 is taking O(nm) in worse case.
         for ss in subStrings:
             i = 0
             while i < len(lines):
-                if not ss in lines[i]:
+                if not ss in lines[i]: # the implementation behind "in" operator allows for sublinear time in good cases and O(nm) in worse case.
                     break
                 else:
                     i += 1
@@ -402,7 +430,43 @@ class Bioinfo_StrongHold(object):
 
 
 
+    """
+    this is a axulliary method to read ugly fasta file.
+    input: fasta file in an rosalind-ugly format
+    output: a dictionary with sample name being the key and corresponding sequence being the value
+    """
+    def read_ugly_fasta(self, filepath):
+        f = open(filepath, 'r')
+        lines = f.readlines()
+        f.close()
 
+        s = 1 # mark the first occurrence of actual sequence
+        i = 0 # init pointer
+        sequences = []
+        samples = []
+        while s + i < len(lines):
+            if not lines[s + i].startswith('>'):
+                i += 1
+            else:
+                # store sample name info
+                sample_name = lines[s - 1] # list indexing returns a value
+                samples.append(sample_name.rstrip('\n'))
+
+                # store sequence info
+                e = s + i # mark the end of an entire sequence
+                sequences.append(lines[s : e]) # list slicing returns a list
+
+                # mark the next occurrence of actual sequence and restore pointer
+                s = s + i + 1
+                i = 0
+
+        # connect disconnected sequence
+        for i in range(len(sequences)):
+            sequence = sequences[i]
+            sequence = [seq.rstrip('\n') for seq in sequence]
+            sequences[i] = ''.join(sequence)
+
+        return dict((k, v) for k, v in zip(samples, sequences))
 
 
 
